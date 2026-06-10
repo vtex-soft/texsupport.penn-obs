@@ -4,7 +4,7 @@
 %%   Observational Studies (OBS)
 %%
 \NeedsTeXFormat{LaTeX2e}
-\ProvidesClass{obs}[2026/05/20 v1.2, OBS journal class]
+\ProvidesClass{obs}[2026/06/09 v1.3, OBS journal class]
 
 %% Numbering switches:
 \newif\if@seceqn \@seceqnfalse
@@ -339,10 +339,33 @@
   }
 %% Defines the pagestyle for the rest of the pages
 \def\ps@headings{%
-  \def\@oddhead{\csuse{tagpdf@artifact@start}\hfill\small\textsc{\@runtitle}\hfill\csuse{tagpdf@artifact@stop}}%
-  \def\@evenhead{\csuse{tagpdf@artifact@start}\hfill\small\textsc{\@runauthor}\hfill\csuse{tagpdf@artifact@stop}}%
-  \def\@oddfoot{\csuse{tagpdf@artifact@start}\hfill\small\thepage\hfill\csuse{tagpdf@artifact@stop}}%
+  \def\pseudo@head@line{\small\textsc{\@runtitle}}%
+  \def\@oddhead{%
+    \csname check@head@line\endcsname
+    \csuse{tagpdf@artifact@start}%
+    \hfill\small\textsc{\@runtitle}\hfill
+    \csuse{tagpdf@artifact@stop}%
+    }%
+  \def\@evenhead{%
+    \csuse{tagpdf@artifact@start}%
+    \hfill\small\textsc{\@runauthor}\hfill
+    \csuse{tagpdf@artifact@stop}%
+    }%
+  \def\@oddfoot{%
+    \csuse{tagpdf@artifact@start}%
+    \hfill\small\thepage\hfill
+    \csuse{tagpdf@artifact@stop}%
+    }%
   \let\@evenfoot\@oddfoot
+  }
+\def\check@head@line{%
+  \bgroup
+    \settowidth\@tempdima{\pseudo@head@line}%
+    \ifdim\@tempdima>\textwidth\relax
+      \ClassError{obs}{Running title is too long!}{}%
+      \global\let\check@head@line\relax
+    \fi
+  \egroup
   }
 
 \def\copyright@authors{}
@@ -402,7 +425,10 @@
     \fi
   \fi
   \ifx\@runtitle\@empty
-    \gdef\@runtitle{\@title}%
+    \gdef\@runtitle{%
+      \let\\=\relax
+      \@title
+      }%
   \fi
   }
 
@@ -832,6 +858,280 @@
 \newtheorem{axiom}[theorem]{Axiom}
 
 %%%%%%
+%%
+%%  ======= THE BIBLIOGRAPHY =======
+%%
+%%% \citefix -- fixes \NAT@citex (to make a hyperlink from year component in cite command).
+\def\citefix{%
+    \def\NAT@citex[##1][##2]##3{%
+        \NAT@sort@cites{##3}%
+        \let\@citea\@empty
+        \@cite{%
+            \let\NAT@nm\@empty
+            \let\NAT@year\@empty
+            \@for\@citeb:=\NAT@cite@list\do{%
+                \edef\@citeb{\expandafter\@firstofone\@citeb}%
+                \if@filesw
+                    \immediate\write\@auxout{\string\citation{\@citeb}}%
+                \fi
+                \@ifundefined{b@\@citeb\@extra@b@citeb}{%
+                    \@citea{\reset@font\bfseries ?}%
+                    \NAT@citeundefined
+                    \PackageWarning{natbib}{Citation `\@citeb' on page \thepage \space undefined}%
+                    \def\NAT@date{}%
+                    }{%
+                        \let\NAT@last@nm=\NAT@nm
+                        \let\NAT@last@yr=\NAT@year
+                        \NAT@parse{\@citeb}%
+                        \ifNAT@longnames
+                            \@ifundefined{bv@\@citeb\@extra@b@citeb}{%
+                                \let\NAT@name=\NAT@all@names
+                                \global\@namedef{bv@\@citeb\@extra@b@citeb}{}%
+                                }{}%
+                        \fi
+                        \ifNAT@full
+                            \let\NAT@nm\NAT@all@names
+                        \else
+                            \let\NAT@nm\NAT@name
+                        \fi
+                        \ifNAT@swa
+                            \ifcase\NAT@ctype
+                                \if\relax\NAT@date\relax
+                                    \@citea\NAT@nmfmt{\NAT@nm}%
+                                    \hyper@natlinkstart{\@citeb\@extra@b@citeb}%
+                                    \NAT@date\hyper@natlinkend
+                                \else
+                                    \ifx\NAT@last@nm\NAT@nm\NAT@yrsep
+                                        \ifx\NAT@last@yr\NAT@year
+                                            \hyper@natlinkstart{\@citeb\@extra@b@citeb}\NAT@exlab
+                                            \hyper@natlinkend
+                                        \else
+                                            \unskip\
+                                            \hyper@natlinkstart{\@citeb\@extra@b@citeb}\NAT@date
+                                            \hyper@natlinkend
+                                        \fi
+                                    \else
+                                        \@citea\NAT@nmfmt{\NAT@nm}%
+                                        \NAT@aysep\
+                                        \hyper@natlinkstart{\@citeb\@extra@b@citeb}%
+                                        \NAT@date\hyper@natlinkend
+                                    \fi
+                                \fi
+                            \or
+                                \@citea\hyper@natlinkstart{\@citeb\@extra@b@citeb}%
+                                \NAT@nmfmt{\NAT@nm}\hyper@natlinkend
+                            \or
+                                \@citea\hyper@natlinkstart{\@citeb\@extra@b@citeb}%
+                                \NAT@date\hyper@natlinkend
+                            \or
+                                \@citea\hyper@natlinkstart{\@citeb\@extra@b@citeb}%
+                                \NAT@alias\hyper@natlinkend
+                            \fi
+                            \def\@citea{\NAT@sep\ }%
+                        \else
+                            \ifcase\NAT@ctype
+                                \if\relax\NAT@date\relax
+                                    \@citea\hyper@natlinkstart{\@citeb\@extra@b@citeb}%
+                                    \NAT@nmfmt{\NAT@nm}\hyper@natlinkend
+                                \else
+                                    \ifx\NAT@last@nm\NAT@nm\NAT@yrsep
+                                        \ifx\NAT@last@yr\NAT@year
+                                            \hyper@natlinkstart{\@citeb\@extra@b@citeb}\NAT@exlab
+                                            \hyper@natlinkend
+                                        \else
+                                            \unskip\
+                                            \hyper@natlinkstart{\@citeb\@extra@b@citeb}\NAT@date
+                                            \hyper@natlinkend
+                                        \fi
+                                    \else
+                                        \@citea\NAT@nmfmt{\NAT@nm}%
+                                        \ \NAT@@open
+                                        \if*##1*%
+                                        \else
+                                            ##1\
+                                        \fi
+                                        \hyper@natlinkstart{\@citeb\@extra@b@citeb}%
+                                        \NAT@date\hyper@natlinkend
+                                    \fi
+                                \fi
+                            \or
+                                \@citea\hyper@natlinkstart{\@citeb\@extra@b@citeb}%
+                                \NAT@nmfmt{\NAT@nm}\hyper@natlinkend
+                            \or
+                                \@citea\hyper@natlinkstart{\@citeb\@extra@b@citeb}%
+                                \NAT@date\hyper@natlinkend
+                            \or
+                                \@citea\hyper@natlinkstart{\@citeb\@extra@b@citeb}%
+                                \NAT@alias\hyper@natlinkend
+                            \fi
+                            \if\relax\NAT@date\relax
+                                \def\@citea{\NAT@sep\ }%
+                            \else
+                                \def\@citea{\NAT@@close\NAT@sep\ }%
+                            \fi
+                        \fi
+                        }%
+                }%
+            \ifNAT@swa
+            \else
+                \if*##2*%
+                \else
+                    \NAT@cmt##2%
+                \fi
+                \if\relax\NAT@date\relax
+                \else
+                    \NAT@@close
+                \fi
+            \fi
+            }{##1}{##2}%
+        }%
+    \let\@citex\NAT@citex
+    }
+
+\def\thebibliography@size{\footnotesize}
+
+
+
+%%  Smart \MR
+%%  Code suggested by Vilmos Prokaj <prokaj@cs.elte.hu>
+%%  solves the problem when MR is in a format
+%%  \MR{MR1037262 (91i:60148)}
+
+%%  Without MR this macro removes the MR prefix if it
+%%  is present unchange the argument otherwise
+\def\woMR#1{\w@MR#1MR#1MR\relax}%
+\def\w@MR#1MR#2MR#3\relax{#2}
+\def\MRfixed{MR\woMR}%
+
+%%  This splits MR... (...)
+\def\@MR#1 #2\relax#3{%
+    \href{https://mathscinet.ams.org/mathscinet-getitem?mr=#1}{\MRfixed{#3}}%
+    }
+\let\MR\MRfixed
+
+\def\arxivurl#1{\href{https://arxiv.org/abs/#1}{#1}}
+
+%%  thebibliography - structured
+%%  Setting a "style" for a command:
+%%  \set@bibl@cmd{bvolume}  == \def\bvolume#1{{\bvolume@style #1}}
+
+\def\set@bibl@cmd#1{%
+    \expandafter\def\csname #1\endcsname##1{{%
+        \csname #1@style\endcsname##1%
+        }}%
+    }
+\let\endbibitem\relax
+
+\def\bibl@cmds@I{bvolume,binits,bsnm,bparticle,bsuffix,bdegs,%
+  bsertitle,btitle,bbtitle,batitle,bjtitle,bctitle,bbtitle,bauthor,%
+  binstitute,binstitutionaled,bissue,bnumber,bmonth,bedition,bpublisher,blocation,%
+  bisbn,bissn,bfpage,blpage,byear,bcomment,bsupplement,%
+  beditor,bseriesno,bconfname,bconflocation,bconfdate,%
+  oauthor,oinstitute,borganization,bhowpublished,baddress}
+\def\do#1{\set@bibl@cmd{#1}}
+\expandafter\docsvlist\expandafter{\bibl@cmds@I}
+
+
+%%  bauthor, beditor
+\def\bbl@bauthor#1{%
+    \csname bauthor@hook\endcsname{%
+        \let\binits\@firstofone
+        \let\bsnm\@firstofone
+        \let\bfnm\@gobble
+        \let\bparticle\@firstofone
+        \let\bsuffix\@firstofone
+        \bauthor@style
+        #1%
+        }%
+    }
+\def\bbl@beditor#1{{%
+    \let\binits\@firstofone
+    \let\bsnm\@firstofone
+    \let\bfnm\@gobble
+    \let\bparticle\@firstofone
+    \let\bsuffix\@firstofone
+    \beditor@style
+    #1%
+    }}
+%% \bid{MR={},doi={},...}
+\define@key{bid}{mr}{\bid@sep\MR{#1}}
+\define@key{bid}{doi}{\bid@sep \doiurl{\doi@base #1}}
+\define@key{bid}{pubmed}{}
+\define@key{bid}{pii}{}
+\define@key{bid}{issn}{}
+\def\bbl@bid#1{\setkeys{bid}{#1}}
+\ifdefined\HCode
+\else
+  \def\doiurl{\url}
+\fi
+%%  For compatibility with old bibtex style
+\def\bdoi#1{\ignorespaces}
+
+%%  common@pub@types
+\def\common@pub@types{%
+    \def\AND{and }%
+    \let\bmisc\@firstofone
+    \let\bnote\@firstofone
+    \let\banumber\@firstofone
+    \let\bmrnumber\MR
+    \def\bid@sep{\def\bid@sep{. }}%
+    \let\bid\bbl@bid
+    \csname common@pub@types@hook\endcsname
+    }
+
+%%  default 
+\def\AND{ and }
+\def\no@editor@style{\def\beditor@style{}}
+\def\oauthor@style{}
+\def\bauthor@style{}
+\def\beditor@style{}
+\def\bjtitle@style{\itshape}
+\def\bbtitle@style{\itshape}
+\def\bsertitle@style{\itshape}
+\def\bvolume@style{}
+\def\bseriesno@style{}
+
+\let\oauthor\bbl@bauthor
+
+\ifdefined\HCode
+\else
+    %%  article
+    \def\botherref{\@ifnextchar[{\@botherref}{\@botherref[]}}
+    \def\@botherref[#1]{%
+        \common@pub@types
+        }
+
+    %%  article
+    \def\barticle{\@ifnextchar[{\@barticle}{\@barticle[]}}
+    \def\@barticle[#1]{%
+        \common@pub@types
+        }
+
+    %%  book, booklet,...
+    \def\bbook{\@ifnextchar[{\@bbook}{\@bbook[]}}
+    \def\@bbook[#1]{%
+        \common@pub@types
+        \let\bisbn\@gobble
+        }
+
+    %%  inproceedings, incollection
+    \def\bchapter{\@ifnextchar[{\@bchapter}{\@bchapter[]}}
+    \def\@bchapter[#1]{%
+        \common@pub@types
+        \let\bisbn\@gobble
+        }
+\fi
+
+\let\betal@style\relax
+\def\betal{{\betal@style et al.}}
+
+%%  \bptok
+\def\bptok#1{\ignorespaces}
+\ifx\OrigBibText\undefined
+    \long\def\OrigBibText#1\endOrigBibText{}
+\fi
+
+%%%%%%%
 
 \pagestyle{headings}
 
