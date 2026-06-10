@@ -4,7 +4,7 @@
 %%   Observational Studies (OBS)
 %%
 \NeedsTeXFormat{LaTeX2e}
-\ProvidesClass{obs}[2026/06/09 v1.3, OBS journal class]
+\ProvidesClass{obs}[2026/06/10 v1.5, OBS journal class]
 
 %% Numbering switches:
 \newif\if@seceqn \@seceqnfalse
@@ -170,6 +170,14 @@
   \fi
   }
 \def\@published{\@nil}
+\def\received#1{%
+  \def\@tempa{#1}%
+  \ifx\@tempa\@empty
+  \else
+    \gdef\@received{#1}%
+  \fi
+  }
+\def\@received{\@nil}
 
 \def\accepted@prefix{Accepted~}
 \def\published@prefix{Published~}
