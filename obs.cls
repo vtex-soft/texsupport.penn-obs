@@ -4,7 +4,7 @@
 %%   Observational Studies (OBS)
 %%
 \NeedsTeXFormat{LaTeX2e}
-\ProvidesClass{obs}[2026/06/10 v1.5, OBS journal class]
+\ProvidesClass{obs}[2026/06/17 v1.6, OBS journal class]
 
 %% Numbering switches:
 \newif\if@seceqn \@seceqnfalse
@@ -456,12 +456,14 @@
 \newlength\beforetitskip
 \newlength\interauthorskip  
 \newlength\aftermaketitskip
+\newlength\afterfrontmatterskip
 
 %% Changeable parameters.
-\setlength\aftertitskip{0.1in plus 0.2in minus 0.2in}
-\setlength\beforetitskip{0.05in plus 0.08in minus 0.08in}
-\setlength\interauthorskip{0.08in plus 0.1in minus 0.1in}
-\setlength\aftermaketitskip{0.3in plus 0.1in minus 0.1in}
+\setlength\aftertitskip{0.1in}
+\setlength\interauthorskip{0.08in}
+%\setlength\aftermaketitskip{0.3in plus 0.1in minus 0.1in}
+\setlength\aftermaketitskip{0.3in plus 2pt minus 2pt}
+\setlength\afterfrontmatterskip{0.25in}
 
 \DeclareRobustCommand{\ead}[1]{\hfill{\small\href{#1}{#1}}}
 
@@ -483,7 +485,8 @@
         \advance\@tempcnta\@ne
         {\bfseries\upshape\csname author\the\@tempcnta\endcsname}\\
         {\small\itshape\csname address\the\@tempcnta\endcsname}%
-        \vskip\interauthorskip\noindent
+        \vskip\interauthorskip
+        \noindent
         }%
     \egroup
     \ifdefined\@dedicated
@@ -495,12 +498,14 @@
     \else
       \unvbox\absbox
       \par
+      \vskip\afterfrontmatterskip
     \fi
     \ifvoid\keybox
     \else
-      \vskip8pt
+      \vskip-10pt
       \unvbox\keybox
       \par
+      \vskip\afterfrontmatterskip
     \fi
 %    }%
   }
@@ -730,10 +735,10 @@
 
 %% use \begin{abstract} .. \end{abstract} for abstracts.
 \def\abstractname{\large\textbf{Abstract}}
-\def\abstract@font{\small\noindent}
-\def\abstractname@postskip{\vskip0.7ex}
+\def\abstract@font{\small}
+\def\abstractname@postskip{\vskip0.7ex\parindent\z@}
 \newbox\absbox
-\renewenvironment{abstract}
+\renewenvironment{abstract}%
   {%
     \global\setbox\absbox=\vbox\bgroup%
       \leftskip 20pt\relax
@@ -745,7 +750,7 @@
   }{%
       \csuse{tagpdf@abstract@stop}%
       \par
-    \egroup
+    \egroup%
   }
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -845,8 +850,8 @@
   \def\thesection{\Alph{section}}%
   \def\section{%
     \@ifnextchar*{\@startsection{section}{1}{\z@}{-0.24in}{0.10in}{\large\raggedright\bfseries}}%
-                 {\@startsection{section}{1}{\z@}{-0.24in}{0.10in}{\large\raggedright\bfseries Appendix\ }}
-    }
+                 {\@startsection{section}{1}{\z@}{-0.24in}{0.10in}{\large\raggedright\bfseries Appendix\ }}%
+    }%
   }
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -1025,7 +1030,9 @@
 
 \def\set@bibl@cmd#1{%
     \expandafter\def\csname #1\endcsname##1{{%
+        \csuse{vtxml@#1@start}%
         \csname #1@style\endcsname##1%
+        \csuse{vtxml@#1@stop}%
         }}%
     }
 \let\endbibitem\relax
@@ -1106,28 +1113,34 @@
     %%  article
     \def\botherref{\@ifnextchar[{\@botherref}{\@botherref[]}}
     \def\@botherref[#1]{%
+        \csuse{vtxml@botherref@start}%
         \common@pub@types
         }
-
+    \def\endbotherref{\csuse{vtxml@botherref@stop}}
+    
     %%  article
     \def\barticle{\@ifnextchar[{\@barticle}{\@barticle[]}}
     \def\@barticle[#1]{%
+        \csuse{vtxml@barticle@start}%
         \common@pub@types
         }
+    \def\endbarticle{\csuse{vtxml@barticle@stop}}
 
     %%  book, booklet,...
     \def\bbook{\@ifnextchar[{\@bbook}{\@bbook[]}}
     \def\@bbook[#1]{%
+        \csuse{vtxml@bbook@start}%
         \common@pub@types
-        \let\bisbn\@gobble
         }
+    \def\endbbook{\csuse{vtxml@bbook@stop}}
 
     %%  inproceedings, incollection
     \def\bchapter{\@ifnextchar[{\@bchapter}{\@bchapter[]}}
     \def\@bchapter[#1]{%
+        \csuse{vtxml@bchapter@start}%
         \common@pub@types
-        \let\bisbn\@gobble
         }
+    \def\endbchapter{\csuse{vtxml@bchapter@stop}}
 \fi
 
 \let\betal@style\relax
