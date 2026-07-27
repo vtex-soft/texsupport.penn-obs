@@ -4,7 +4,7 @@
 %%   Observational Studies (OBS)
 %%
 \NeedsTeXFormat{LaTeX2e}
-\ProvidesClass{obs}[2026/06/17 v1.6, OBS journal class]
+\ProvidesClass{obs}[2026/07/27 v1.9, OBS journal class]
 
 %% Numbering switches:
 \newif\if@seceqn \@seceqnfalse
@@ -64,12 +64,13 @@
 \InputIfFileExists{obs.cfg}{}{}
 
 \def\@journal{Observational Studies}
+\def\@journal@id{2435}
 %\def\@journalabbrev{}
 %\def\@journalurl{}
 \def\@jid{obs}
 \def\@JID{OBS}
 %\gdef\@issn{}
-%\gdef\@eissn{2767-3324}
+\gdef\@eissn{2767-3324}
 
 %\RequirePackage{lmodern}
 %\DeclareFontFamily{OMX}{lmex}{}
@@ -327,16 +328,29 @@
   }
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%                         L I C E N S E S
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\def\lic@namespace{http://www.niso.org/schemas/ali/1.0/}%
+\def\lic@by@nc@nd@ref{https://creativecommons.org/licenses/by-nc-nd/4.0}%
+\def\lic@by@nc@nd@name{Creative Commons license (CC BY-NC-ND 4.0)}%
+\def\lic@by@nc@nd@name@xml{Creative Commons Attribution-NonCommercial-NoDerivatives License (4.0)}%
+\def\copyright@text@one{This is an open access article distributed under the terms of }%
+\def\copyright@text@two{%
+  which permits non-commercial use and sharing in any medium or format, provided the original author and source are 
+  credited. If you remix, transform, or build upon this work, you may not distribute the modified material.}%
+\def\copyright@authors{}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%                         P A G E S T Y L E
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %% Defines the pagestyle for the title page.
 \def\copyright@line{%
   \copyright\@pubyear\ \copyright@authors. 
-  This is an open access article distributed under the terms of a Creative Commons license (CC BY-NC-ND 4.0).}
+  \copyright@text@one a \lic@by@nc@nd@name.}
 \def\ps@copyright{%
   \def\@oddhead{%
-    \parbox{\textwidth}{\normalsize\@journal\ \@volume\ (\@pubyear): \@firstpage--\@lastpage\hfill\history@fmt}%
+    \parbox{\textwidth}{\normalsize\@journal\ \@volume.\@issue\ (\@pubyear): \@firstpage--\@lastpage\hfill\history@fmt}%
     }%
   \let\@evenhead\@oddhead
   \def\@oddfoot{%
@@ -467,6 +481,12 @@
 
 \DeclareRobustCommand{\ead}[1]{\hfill{\small\href{#1}{#1}}}
 
+% tex4ht hooks
+\let\author@tht\@gobble
+\let\author@tht@end\relax
+\let\address@tht\@gobble
+\let\address@tht@end\relax
+
 %\def\AND{\hss \vskip\interauthorskip}
 \def\@maketitle{%
   \@tempcnta=0%
@@ -483,8 +503,12 @@
     \bgroup
       \@whilenum{\@tempcnta<\c@address}\do{%
         \advance\@tempcnta\@ne
+        \author@tht{\the\@tempcnta}%
         {\bfseries\upshape\csname author\the\@tempcnta\endcsname}\\
+        \author@tht@end
+        \address@tht{\the\@tempcnta}%
         {\small\itshape\csname address\the\@tempcnta\endcsname}%
+        \address@tht@end
         \vskip\interauthorskip
         \noindent
         }%
@@ -744,8 +768,11 @@
       \leftskip 20pt\relax
       \rightskip 20pt\relax
       \csuse{tagpdf@abstract@start}%
-      {\centerline\abstractname}%
-      \abstractname@postskip%
+      \ifdefined\HCode
+      \else
+        {\centerline\abstractname}%
+        \abstractname@postskip%
+      \fi
       \abstract@font%
   }{%
       \csuse{tagpdf@abstract@stop}%
@@ -769,7 +796,10 @@
       \rightskip 20pt\relax
       \small
       \csuse{tagpdf@keywords@start}%
-      \noindent\keywordsname
+      \ifdefined\HCode
+      \else
+        \noindent\keywordsname
+      \fi
   }%
   {%
       \csuse{tagpdf@keywords@stop}%
@@ -1075,10 +1105,7 @@
 \define@key{bid}{pii}{}
 \define@key{bid}{issn}{}
 \def\bbl@bid#1{\setkeys{bid}{#1}}
-\ifdefined\HCode
-\else
-  \def\doiurl{\url}
-\fi
+\def\doiurl{\url}
 %%  For compatibility with old bibtex style
 \def\bdoi#1{\ignorespaces}
 
@@ -1108,40 +1135,37 @@
 
 \let\oauthor\bbl@bauthor
 
-\ifdefined\HCode
-\else
-    %%  article
-    \def\botherref{\@ifnextchar[{\@botherref}{\@botherref[]}}
-    \def\@botherref[#1]{%
-        \csuse{vtxml@botherref@start}%
-        \common@pub@types
-        }
-    \def\endbotherref{\csuse{vtxml@botherref@stop}}
-    
-    %%  article
-    \def\barticle{\@ifnextchar[{\@barticle}{\@barticle[]}}
-    \def\@barticle[#1]{%
-        \csuse{vtxml@barticle@start}%
-        \common@pub@types
-        }
-    \def\endbarticle{\csuse{vtxml@barticle@stop}}
+%%  article
+\def\botherref{\@ifnextchar[{\@botherref}{\@botherref[]}}
+\def\@botherref[#1]{%
+    \csuse{vtxml@botherref@start}%
+    \common@pub@types
+    }
+\def\endbotherref{\csuse{vtxml@botherref@stop}}
 
-    %%  book, booklet,...
-    \def\bbook{\@ifnextchar[{\@bbook}{\@bbook[]}}
-    \def\@bbook[#1]{%
-        \csuse{vtxml@bbook@start}%
-        \common@pub@types
-        }
-    \def\endbbook{\csuse{vtxml@bbook@stop}}
+%%  article
+\def\barticle{\@ifnextchar[{\@barticle}{\@barticle[]}}
+\def\@barticle[#1]{%
+    \csuse{vtxml@barticle@start}%
+    \common@pub@types
+    }
+\def\endbarticle{\csuse{vtxml@barticle@stop}}
 
-    %%  inproceedings, incollection
-    \def\bchapter{\@ifnextchar[{\@bchapter}{\@bchapter[]}}
-    \def\@bchapter[#1]{%
-        \csuse{vtxml@bchapter@start}%
-        \common@pub@types
-        }
-    \def\endbchapter{\csuse{vtxml@bchapter@stop}}
-\fi
+%%  book, booklet,...
+\def\bbook{\@ifnextchar[{\@bbook}{\@bbook[]}}
+\def\@bbook[#1]{%
+    \csuse{vtxml@bbook@start}%
+    \common@pub@types
+    }
+\def\endbbook{\csuse{vtxml@bbook@stop}}
+
+%%  inproceedings, incollection
+\def\bchapter{\@ifnextchar[{\@bchapter}{\@bchapter[]}}
+\def\@bchapter[#1]{%
+    \csuse{vtxml@bchapter@start}%
+    \common@pub@types
+    }
+\def\endbchapter{\csuse{vtxml@bchapter@stop}}
 
 \let\betal@style\relax
 \def\betal{{\betal@style et al.}}
