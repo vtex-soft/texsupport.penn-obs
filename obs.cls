@@ -4,7 +4,7 @@
 %%   Observational Studies (OBS)
 %%
 \NeedsTeXFormat{LaTeX2e}
-\ProvidesClass{obs}[2026/07/27 v1.9, OBS journal class]
+\ProvidesClass{obs}[2026/08/12 v1.11, OBS journal class]
 
 %% Numbering switches:
 \newif\if@seceqn \@seceqnfalse
@@ -49,7 +49,7 @@
 \RequirePackage{graphicx}
 \RequirePackage{url}
 
-\AtEndPreamble{%
+\def\load@hyperref{%
   \RequirePackage{hyperref}
   \hypersetup{%
     unicode=true,
@@ -60,6 +60,13 @@
     breaklinks=true
     }
   }
+\ifdefined\HCode
+  \load@hyperref
+\else
+  \AtEndPreamble{%
+    \load@hyperref
+    }
+\fi
 
 \InputIfFileExists{obs.cfg}{}{}
 
@@ -1178,6 +1185,12 @@
 
 %%%%%%%
 
+\AtEndDocument{%
+  \ifodd\value{page}%
+    \clearpage
+    \null
+  \fi
+  }
 \pagestyle{headings}
 
 \endinput
